@@ -1,8 +1,11 @@
 # Data-Efficient Operator Learning via Unsupervised Pretraining and In-Context Learning ([Paper Link](https://arxiv.org/abs/2402.15734))
 
-<img src="[teaser.png](https://github.com/user-attachments/assets/e523f36c-b261-4ae3-a5d4-4a141c746fe4)" width="200"/>
+<p align="center">
+    <img width="800" src="assets/teaser.png" alt="Overview">
+</p>
 
-This repository contains code for pre-training and fine-tuning the Fourier Neural Operator and Video-MAE models with unlabeled, domain-specific data.
+## Introduction
+In this work, seeking data efficiency, we design unsupervised pretraining for PDE operator learning. To reduce the need for training data with heavy simulation costs, we mine unlabeled PDE data without simulated solutions, and pretrain neural operators with physics-inspired reconstruction-based proxy tasks. To improve out-of-distribution performance, we further assist neural operators in flexibly leveraging a similarity-based method that learns in-context examples, without incurring extra training costs or designs. Extensive empirical evaluations on a diverse set of PDEs demonstrate that our method is highly data-efficient, more generalizable, and even outperforms conventional vision-pretrained models. 
 
 ## Environment
 Please use the following command to install the necessary packages to run the code.
