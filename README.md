@@ -20,8 +20,8 @@ We have an additional repository [data_generation](https://github.com/jsong23333
 - For Diffusion-Reaction and Incompressible Navier Stokes, we use the data from **PDEBench** ([Data Download Link](https://darus.uni-stuttgart.de/dataset.xhtml?persistentId=doi:10.18419/darus-2986)).
 ### Dataloader
 Dataloaders can be found at `data_utils/`. This repository currently contains dataloader for the following PDE equations: Poisson, Helmholtz, Diffusion-Reaction and Incompressible Navier Stokes.
-- For Poisson and Helmholtz data, we refer to the dataloader from **Towards Foundation Models for Scientific Machine Learning: Characterizing Scaling and Transfer Behavior** ([Github Link](https://github.com/ShashankSubramanian/neuraloperators-TL-scaling)).
-- For Diffusion-Reaction and Incompressible Navier Stokes, we refer to the dataloader from **Multiple Physics Pretraining for Physical Surrogate Models** ([Github Link](https://github.com/PolymathicAI/multiple_physics_pretraining)).
+- For Poisson and Helmholtz data, we built on the previous work: **Towards Foundation Models for Scientific Machine Learning: Characterizing Scaling and Transfer Behavior** ([Github Link](https://github.com/ShashankSubramanian/neuraloperators-TL-scaling)).
+- For Diffusion-Reaction and Incompressible Navier Stokes, we built on the previous work: **Multiple Physics Pretraining for Physical Surrogate Models** ([Github Link](https://github.com/PolymathicAI/multiple_physics_pretraining)).
 
 <!---
 ## Training and Inference
