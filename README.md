@@ -23,6 +23,44 @@ Dataloaders can be found at `data_utils/`. This repository currently contains da
 - For Poisson and Helmholtz data, we built on the previous work: **Towards Foundation Models for Scientific Machine Learning: Characterizing Scaling and Transfer Behavior** ([Github Link](https://github.com/ShashankSubramanian/neuraloperators-TL-scaling)).
 - For Diffusion-Reaction and Incompressible Navier Stokes, we built on the previous work: **Multiple Physics Pretraining for Physical Surrogate Models** ([Github Link](https://github.com/PolymathicAI/multiple_physics_pretraining)).
 
+## Baseline Training, Pretraining and Finetuning
+The repository contains `train_basic.py` for baseline training and fine-tuning, `pretrain_basic.py` for pretraining. The YAML files under `configs/` can be used to control the model and data specs, as well as developer tool [W&B](https://wandb.ai/site/). 
+### Setting parameters
+Some vital parameters are listed below:
+```
+model_type: [vmae, fno] # This controls the model architecture. We use VMAE for Diffusion-Reaction and Incompressible Navier Stokes, FNO for Poisson and Helmholtz data.
+```
+**There is a difference in adding data paths for the two provided dataloaders:**
+- Format for including data path for Diffusion-Reaction and Incomp. Navier Stokes
+```
+  train_data_paths: [
+              ['/path/to/data/PDEBench/2D/NS_incom', 'incompNS', ''],
+              ]
+  valid_data_paths: [
+              ['/path/to/data/PDEBench/2D/NS_incom', 'incompNS', ''],
+              ]
+```
+- Format for including data path for Poisson and Helmholtz
+```
+  train_path:   '/path/to/poisson_64_e5_15_train.h5'
+  val_path:     '/path/to/poisson_64_e5_15_val.h5'
+  test_path:    '/path/to/poisson_64_e5_15_test.h5'
+  scales_path:  '/path/to/poisson_64_e5_15_train_scale.npy'  # This includes normalization factors for training data.
+  train_rand_idx_path: '/path/to/train_rand_idx.npy' # Optional. This contains a manually randomized index sequence for the training data.
+```
+**To fine-tune a model instead of baseline:**
+```
+  resuming: False  # This is for resuming a training procedure. To prevent confusion, this flag needs to be False for finetuning.
+  pretrained: True
+  pretrained_ckpt_path: /pretrained_ckpt_path/training_checkpoints/ckpt.tar  # Include the path for your pretrained checkpoint.
+```
+### Start training with the set parameters
+We've included a `run_pretrain.sh` and `run_finetune.sh` as examples to run the training process.
+Another option is to run the one-liner with single GPU usage:
+```
+python train_basic.py --run_name random_run_name --config config_file_name(./configs/xxx.yaml) --yaml_config yaml_config_name(eg: helm-64-o5_15_ft5_r2)
+```
+
 <!---
 ## Training and Inference
 - Configuration files (in YAML format) are in `configs/` for different PDE systems. For example, config for Poisson's is in `configs/operator_poisson.yaml`.  The main configs for the three systems are ``poisson-scale-k1_5``, ``ad-scale_adr0p2_1`` and ``helm-scale-o1_10``. The data paths and scales paths need to be set here. For example, the config at [configs/operator_poisson.yaml](config/operator_poisson.yaml) has the data setup and minimal hyperparameters as follows:
