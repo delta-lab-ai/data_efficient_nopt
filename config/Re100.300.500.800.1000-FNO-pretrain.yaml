@@ -1,0 +1,51 @@
+data:
+  name: KF
+  paths: ['/pscratch/sd/c/chenwy/physics_informed_pretrain/Re100.npy', '/pscratch/sd/c/chenwy/physics_informed_pretrain/Re300.npy', '/pscratch/sd/c/chenwy/physics_informed_pretrain/Re500.npy', '/pscratch/sd/c/chenwy/physics_informed_pretrain/Re800.npy', '/pscratch/sd/c/chenwy/physics_informed_pretrain/Re1000.npy']
+  # Re: 500
+  offset: 0
+  total_num: 57545
+  raw_res: [256, 256, 1]
+  n_data_samples: 57545
+  data_res: [128, 128, 257]  # resolution in 1 second
+  pde_res: [128, 128, 257]   # resolution in 1 second # for physical loss
+  a_offset: 0
+  # n_a_samples: 250
+  testoffset: 51790
+  n_test_samples: 5755
+  t_duration: 0.125
+  shuffle: True
+  mask_ratio: 0.9 # 0~1 or None
+  blur: [0, 0] # TODO: range of blur sigma
+
+model:
+  layers: [64, 64, 64, 64, 64]
+  modes1: [12, 12, 12, 12]
+  modes2: [12, 12, 12, 12]
+  modes3: [12, 12, 12, 12]
+  fc_dim: 128
+  act: gelu
+  pad_ratio: [0, 0.125]
+
+train:
+  batchsize: 2
+  start_iter: 0
+  num_iter: 100_001
+  milestones: [40_000, 80_000]
+  base_lr: 0.001
+  scheduler_gamma: 0.5
+  ic_loss: 0.0
+  f_loss: 0.0
+  xy_loss: 1.0
+  save_step: 20000
+  eval_step: 1000
+
+test:
+  batchsize: 1
+  data_res: [64, 64, 257]
+  ckpt: model-400.pt
+
+log:
+  logdir: Re100-1000_FNO-s_pretrain
+  entity: wuyang-chen
+  project: foundationmodels
+  group: Re100-1000_FNO-s_pretrain

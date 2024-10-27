@@ -1,0 +1,55 @@
+data:
+  name: KF
+  paths: ['/global/homes/c/chenwy/data/NS-Re300_T300_id0.npy']
+  # paths: ['/global/homes/c/chenwy/data/NS-Re1001_T300_id0.npy']
+  # paths: ['/global/homes/c/chenwy/data/NS-Re10000_T300_id0.npy']
+  Re: 300
+  offset: 0
+  total_num: 300
+  raw_res: [256, 256, 513] # (300, 513, 256, 256)
+  n_data_samples: 250
+  data_res: [64, 64, 257]  # resolution in 1 second
+  pde_res: [64, 64, 129]   # resolution in 1 second
+  a_offset: 0
+  n_a_samples: 250
+  demo_offset: 250
+  total_demo_samples: 25 # TODO:
+  testoffset: 275
+  total_test_samples: 25
+  n_test_samples: 25
+  t_duration: 0.125
+  shuffle: True
+  mask_ratio: None # 0~1 or None
+
+model:
+  layers: [64, 64, 64, 64, 64]
+  modes1: [12, 12, 12, 12]
+  modes2: [12, 12, 12, 12]
+  modes3: [12, 12, 12, 12]
+  fc_dim: 128
+  act: gelu
+  pad_ratio: [0, 0.125]
+
+train:
+  batchsize: 2
+  start_iter: 0
+  num_iter: 50_001
+  milestones: [20_000, 40_000]
+  base_lr: 0.001
+  scheduler_gamma: 0.5
+  ic_loss: 0.0
+  f_loss: 0.0
+  xy_loss: 1.0
+  save_step: 10000
+  eval_step: 5
+
+test:
+  batchsize: 1
+  data_res: [64, 64, 257]
+  ckpt: model-400.pt
+
+log:
+  logdir: Re300-1_8s-FNO-s
+  entity: pinns
+  project: foundationmodels
+  group: Re300-1_8s-FNO-s

@@ -199,6 +199,150 @@ class FNN2d(nn.Module):
         return x
 
 
+    def forward_icl(self, x, demo_xs, demo_ys, use_tqdm=False):
+        '''
+        x: B, C, H, W
+        demo_xs: J, C, H, W
+        demo_ys: J, H, W
+        '''
+        C_out = 1
+        B, C, H, W = x.shape
+
+        # repeat = 20; p = 0.05; sigma_range = [0, 0]
+        repeat = 1; p = 0.; sigma_range = [0, 0]
+        x_aug = []
+        demo_xs_aug = []
+        for _ in range(repeat):
+            if sum(sigma_range) > 0:
+                sigma = random.uniform(*sigma_range)
+                # https://github.com/scipy/scipy/blob/v1.11.4/scipy/ndimage/_filters.py#L232
+                _kernel = min(int((sigma*4+1)/2)*2+1, (x.shape[1]//2)*2-1)
+            mask = torch.nn.functional.dropout(torch.ones(1, C, H, W).cuda(), p=p)
+            ######
+            if sum(sigma_range) > 0:
+                _x_aug = torchvision.transforms.functional.gaussian_blur(x.clone(), kernel_size=[_kernel, _kernel], sigma=sigma)
+            else:
+                _x_aug = x.clone()
+            _x_aug = _x_aug * mask
+            x_aug.append(_x_aug)
+            ######
+            _demo_xs_aug = []
+            if sum(sigma_range) > 0:
+                _demo_xs_aug = torchvision.transforms.functional.gaussian_blur(demo_xs.clone(), kernel_size=[_kernel, _kernel], sigma=sigma)
+            else:
+                _demo_xs_aug = demo_xs.clone()
+            _demo_xs_aug = _demo_xs_aug * mask
+            demo_xs_aug.append(_demo_xs_aug)
+        x_aug = torch.stack(x_aug, dim=0)
+        demo_xs_aug = torch.stack(demo_xs_aug, dim=0)
+
+        J = demo_xs.shape[0]
+        # pred = self.forward(x).contiguous() # B, H, W, T, 1
+        ######################
+        pred0 = self.forward(x).contiguous() # B, H, W, T, 1
+        pred = torch.stack([self.forward(_x) for _x in x_aug], dim=-1) # B, 1, H, W
+        C = pred.shape[-1]
+        # pred = torch.stack([self.backbone(_x) for _x in x_aug], dim=-1) # B, 1, H, W TODO
+        # C = pred0.shape[-1]
+        ######################
+        demo_pred = []; idx = 0
+        for _demo_xs_aug in demo_xs_aug:
+            idx = 0
+            _demo_pred = []
+            while idx < _demo_xs_aug.shape[0]:
+                _x = _demo_xs_aug[idx:idx+B]
+                ##########
+                _pred = self.forward(_x)
+                # _pred = self.backbone(_x) # TODO
+                ##########
+                _demo_pred.append(_pred)
+                idx += _x.shape[0]
+            demo_pred.append(torch.cat(_demo_pred, dim=0))
+        demo_pred = torch.stack(demo_pred, dim=-1)
+
+        demo_pred_flat = demo_pred.contiguous().view(1, -1, C)
+        # gap_demo_y = torch.abs(demo_pred.squeeze(-1) - demo_ys)
+        # # gap_demo_y_index = torch.argsort(gap_demo_y.view(-1))
+        # # topk_demo = int(0.2 * len(gap_demo_y_index))
+        # # demo_pred_top_flat = demo_pred.contiguous().view(1, -1, C)[:, gap_demo_y_index[:topk_demo], :]
+        # # # demo_pred_top_flat_ker_inv = torch.linalg.inv(torch.abs(demo_pred_top_flat.view(-1, 1) - demo_pred_top_flat.view(1, -1)))
+        # # demo_ys_top_flat = demo_ys.contiguous().view(-1, C)[gap_demo_y_index[:topk_demo], :]
+
+        y_nn = torch.zeros(B, C_out, H, W).cuda()
+        gap_nn = torch.zeros(B, 1, H, W).cuda()
+        stds_nn = torch.zeros(B, 1, H, W).cuda()
+        batch_b = 1; _b = 0
+        batch_h = 64; _h = 0
+        batch_w = 64; _w = 0
+        # topk1 = round(0.2 * H * W * J) # TODO:
+        # topk = round(0.02 * H * W * J) # TODO:
+        #################
+        topk1 = 100*J # TODO:
+        topk = int(20*(J**0.5)) # TODO:
+        # topk = int(2*(J**0.5)) # TODO:
+        #################
+        if use_tqdm:
+            pbar = tqdm(total=np.ceil(B/batch_b) * np.ceil(H/batch_h) * np.ceil(W/batch_w))
+        else:
+            pbar = None
+        while _b < B:
+            _h = 0
+            while _h < H:
+                _w = 0
+                while _w < W:
+                    if pbar is not None:
+                        pbar.set_description("_b %d, _h %d, _w %d, _t %d"%(_b, _h, _w, _t))
+                        pbar.update(1)
+                    pred_flat = pred[_b:_b+batch_b, :, _h:_h+batch_h, _w:_w+batch_w]
+                    __b, _, __h, __w, _ = pred_flat.shape
+                    pred_flat = pred_flat.contiguous().view(-1, 1, C)
+
+                    # gap = (pred_flat - demo_pred_flat).pow(2) / pred_flat.pow(2)
+                    gap = torch.norm((pred_flat - demo_pred_flat).pow(2) / pred_flat.pow(2), dim=-1)
+                    # cos = 1 - pairwise_cosine_similarity(pred_flat.squeeze(1), demo_pred_flat.squeeze(0))
+                    # gap = gap * cos
+                    gap_re = gap.view(__b, __h, __w, -1)
+                    # gap_nn[_b:_b+batch_b, _h:_h+batch_h, _w:_w+batch_w] = torch.mean(torch.sort(gap_re, -1)[0][:, :, :, :topk], -1)
+                    index = torch.argsort(torch.abs(gap_re), -1)[:, :, :, :topk] # TODO: spatial index of ascending sort by pred gap
+                    # index1 = torch.argsort(torch.abs(gap_re), -1)[:, :, :, :topk1] # TODO: spatial index of ascending sort by pred gap
+
+                    # # refine index by prediction accuracy
+                    # gap_re_demo_y = torch.take_along_dim(gap_demo_y.view(1, -1), index1.view(__b*__h*__w, -1), dim=1).view(__b, __h, __w, -1)
+                    # index = torch.take_along_dim(index1.view(__b*__h*__w, -1), torch.argsort(torch.abs(gap_re_demo_y), -1)[:, :, :, :topk].view(__b*__h*__w, -1), dim=-1).view(__b, __h, __w, -1)
+
+                    # _y_nn = 0
+                    # for _k in range(topk):
+                    #     _y_nn += torch.take_along_dim(demo_ys.contiguous().view(-1, C_out), index[:, :, :, _k].view(-1, 1), dim=0).view(__b, C_out, __h, __w)
+                    # _y_nn /= topk
+                    _y_nn = torch.stack([torch.take_along_dim(demo_ys.contiguous().view(-1, C_out), index[:, :, :, _k].view(-1, 1), dim=0).view(__b, C_out, __h, __w) for _k in range(topk)], -1)
+
+                    # # # [X] kernel regression
+                    # # gap = torch.abs(pred_flat.view(-1, 1) - demo_pred_top_flat.view(1, -1))
+                    # # _y_nn = (gap@demo_pred_top_flat_ker_inv)@demo_ys_top_flat
+                    # # _y_nn = _y_nn.view(__b, __h, __w, __t, C)
+
+                    # spatial_dims = (2, 3)
+                    # print("pred:", (((self.target[:, :, _h:_h+batch_h, _w:_w+batch_w] - pred[:, :, _h:_h+batch_h, _w:_w+batch_w]).pow(2).mean(spatial_dims, keepdim=True) / (1e-7 + self.target[:, :, _h:_h+batch_h, _w:_w+batch_w].pow(2).mean(spatial_dims, keepdim=True))).sqrt()).mean().item(), "    ICL:", (((self.target[:, :, _h:_h+batch_h, _w:_w+batch_w] - _y_nn).pow(2).mean(spatial_dims, keepdim=True) / (1e-7 + self.target[:, :, _h:_h+batch_h, _w:_w+batch_w].pow(2).mean(spatial_dims, keepdim=True))).sqrt()).mean().item())
+                    # y_nn[_b:_b+batch_b, :, _h:_h+batch_h, _w:_w+batch_w] = _y_nn
+                    y_nn[_b:_b+batch_b, :, _h:_h+batch_h, _w:_w+batch_w] = _y_nn.mean(-1)
+                    stds_nn[_b:_b+batch_b, :, _h:_h+batch_h, _w:_w+batch_w] = torch.abs(_y_nn.std(-1) / _y_nn.mean(-1))
+
+                    # np.set_printoptions(precision=5)
+                    # print(_h, _w, sum(pred[_b, :2, _h+1, _w+1]-y_nn[_b, :2, _h+1, _w+1]).item(), np.round(pred[_b, :, _h+1, _w+1].detach().cpu().numpy(), 5).tolist(), np.round(y_nn[_b, :, _h+1, _w+1].detach().cpu().numpy(), 5).tolist())
+
+                    _w += batch_w
+                _h += batch_h
+            _b += batch_b
+        # bp()
+        # print(y_nn.mean(), demo_ys.mean())
+        # return y_nn
+        mask = (stds_nn < stds_nn.mean()).float() # TODO:
+        return mask * y_nn + (1-mask) * pred0
+        # return (y_nn + pred) / 2
+        # mask = (torch.clip(gap_nn, 0, 1)**0.5 > 0.1).float().unsqueeze(-1) # TODO:
+        # return (1-mask) * y_nn + mask * pred
+
+
 # channel-wise concatenating X_demo and Y_demo
 class FNN2d_FewShot_Baseline(nn.Module):
     def __init__(self, modes1, modes2,
@@ -746,7 +890,7 @@ class FNN2d_MAE(nn.Module):
         self.mean_constraint = mean_constraint
 
 
-    def forward(self, x, mask):
+    def forward(self, x, mask=None):
         '''
         x: (b, c, h, w)
         '''
