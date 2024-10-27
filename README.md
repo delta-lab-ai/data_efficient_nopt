@@ -14,9 +14,9 @@ In NeurIPS 2024.
 In this work, seeking data efficiency, we design unsupervised pretraining for PDE operator learning. To reduce the need for training data with heavy simulation costs, we mine unlabeled PDE data without simulated solutions, and pretrain neural operators with physics-inspired reconstruction-based proxy tasks. To improve out-of-distribution performance, we further assist neural operators in flexibly leveraging a similarity-based method that learns in-context examples, without incurring extra training costs or designs. Extensive empirical evaluations on a diverse set of PDEs demonstrate that our method is highly data-efficient, more generalizable, and even outperforms conventional vision-pretrained models. 
 
 Highlights:
-1. We introduce unlabeled PDE data and unsupervised pretraining for data-efficient neural operator learning. We show that our method can achieve better performance than models trained with more simulated PDE solutions, or fine-tuned from public checkpoints pretrained on other benchmarks, demonstrating the importance of unsupervised pretraining on domain-specific PDE data.
-2. We propose a similarity-based method to improve the OOD generalization of neural operators, which is flexible and can scale up to a large number of unseen in-context examples (“demos”).
-3. We provide detailed empirical evaluations on both diverse PDE benchmarks and also several real-world scenarios, demonstrating that we can achieve both strong forward modeling performance and significant savings in PDE simulations.
+1. **Unsupervised Pretraining for Neural Operators**: We introduce unlabeled PDE data and unsupervised pretraining for data-efficient neural operator learning. We show that our method can achieve better performance than models trained with more simulated PDE solutions, or fine-tuned from public checkpoints pretrained on other benchmarks, demonstrating the importance of unsupervised pretraining on domain-specific PDE data.
+2. **Scalable In-Context Learning for Neural Operators**: We propose a similarity-based method to improve the OOD generalization of neural operators, which is flexible and can scale up to a large number of unseen in-context examples (“demos”).
+3. **Comprehensive Experiments**: We provide detailed empirical evaluations on both diverse PDE benchmarks and also several real-world scenarios, demonstrating that we can achieve both strong forward modeling performance and significant savings in PDE simulations.
 
 
 ## Prerequisites
@@ -73,6 +73,9 @@ Another option is to run the one-liner with single GPU usage:
 python train_basic.py --run_name random_run_name --config config_file_name(./configs/xxx.yaml) --yaml_config yaml_config_name(eg: helm-64-o5_15_ft5_r2)
 ```
 
+### Choice of Pretrained Checkpoints for Fine-tuning
+Please refer to our Appendix J.1 to choose pretrained checkpoints for different number of samples during downstream fine-tuning.
+
 
 
 ## Data Generation
@@ -95,8 +98,8 @@ pretrain_basic.py
 train_basic.py
 ```
 
-### 4) In-context Learning
-* Use checkpoints by your own [fine-tuning](#3-fine-tuning), or download fine-tuned checkpoints: [Poisson]() | [Helmholtz]()
+### 4) In-context Learning (Out-of-Distribution Testing)
+* Use checkpoints by your own [fine-tuning](#3-fine-tuning), or download fine-tuned checkpoints: [FNO-Poisson]() | [FNO-Helmholtz]()
 ```bash
 CUDA_VISIBLE_DEVICES=0 python inference_fno_helmholtz_poisson.py \
 --config config/inference_poisson.yaml \
@@ -124,7 +127,7 @@ CUDA_VISIBLE_DEVICES=0 python pretrain_fno_ns.py \
 ```
 
 ### 3) Fine-tuning
-* Use checkpoints by your own [pretraining](#2-pretraining-1), or download Pretrained checkpoints: [FNO-NS-Pretrained]()
+* Use checkpoints by your own [pretraining](#2-pretraining-1), or download Pretrained checkpoints: [FNO-NS-Pretrained](https://drive.google.com/drive/folders/1KsLHM85a1UOEMQk7HABoBda9YUlKH4d1?usp=drive_link)
 ```bash
 CUDA_VISIBLE_DEVICES=0 python train_fno_ns.py \
 --config config/Re300-1_8-FNO-s.yaml \
@@ -133,8 +136,8 @@ CUDA_VISIBLE_DEVICES=0 python train_fno_ns.py \
 --log
 ```
 
-### 4) In-context Learning
-* Use checkpoints by your own [fine-tuning](#3-fine-tuning-1), or download fine-tuned checkpoints: [FNO-NS-Finetuned]()
+### 4) In-context Learning (Out-of-Distribution Testing)
+* Use checkpoints by your own [fine-tuning](#3-fine-tuning-1), or download fine-tuned checkpoints: [FNO-NS-Finetuned](https://drive.google.com/file/d/19H6CY9p7E3fF7x4OIKbtlzhI38uevhc8/view?usp=drive_link)
 ```bash
 CUDA_VISIBLE_DEVICES=0 python inference_fno_ns.py \
 --config config/inference_fno_ns.yaml \
@@ -173,13 +176,16 @@ Our implementation is based on McCabe et al. 2023 "[Multiple Physics Pretraining
 
 ### 2) Pretraining
 ```bash
-CUDA_VISIBLE_DEVICES=0 python pretrain_basic.py --run_name test --config basic_config --yaml_config ./config/vmae_config_pretrain.yaml
+CUDA_VISIBLE_DEVICES=0 python pretrain_basic.py \
+--run_name test \
+--config basic_config \
+--yaml_config ./config/vmae_config_pretrain.yaml
 ```
 
 ### 3) Fine-tuning
-* Use checkpoints by your own [pretraining](#2-pretraining-3), or download Pretrained checkpoints: [VMAE-NS-Pretrained]()
+* Use checkpoints by your own [pretraining](#2-pretraining-3), or download Pretrained checkpoints: [VMAE-NS-Pretrained]() (the patch embedding layer and decoder in this checkpoint are already expanded with `ckpt_pretrain2train.py`, ready for fine-tuning)
 ```bash
-python ckpt_pretrain2train.py # expand the first convolution layer in a net2net-like approach
+python ckpt_pretrain2train.py # expand the patch embedding layer and decoder in a net2net-like approach
 
 CUDA_VISIBLE_DEVICES=0 python train_basic.py \
 --run_name test \
