@@ -93,7 +93,7 @@ pretrain_basic.py
 ```
 
 ### 3) Fine-tuning
-* Use checkpoints by your own [pretraining](#2-pretraining), or download Pretrained checkpoints: [Poisson]() | [Helmholtz]()
+* Use checkpoints by your own [pretraining](#2-pretraining), or download Pretrained checkpoints: [Poisson](https://drive.google.com/file/d/1QU_7oljg5f8aIQz0mz4hu39CJG8lErAO/view?usp=drive_link) | [Helmholtz](https://drive.google.com/file/d/1VwcH7e5X7BaXyuX1QZVWXV1a8Ki0W3Bk/view?usp=drive_link)
 ```bash
 train_basic.py
 ```
@@ -183,7 +183,7 @@ CUDA_VISIBLE_DEVICES=0 python pretrain_basic.py \
 ```
 
 ### 3) Fine-tuning
-* Use checkpoints by your own [pretraining](#2-pretraining-3), or download Pretrained checkpoints: [VMAE-NS-Pretrained]() (the patch embedding layer and decoder in this checkpoint are already expanded with `ckpt_pretrain2train.py`, ready for fine-tuning)
+* Use checkpoints by your own [pretraining](#2-pretraining-3), or download Pretrained checkpoints: [VMAE-NS-Pretrained](https://drive.google.com/file/d/16GkD7GniNg6oH1qQoM9OLjEQuQk3TD5I/view?usp=drive_link).
 ```bash
 python ckpt_pretrain2train.py # expand the patch embedding layer and decoder in a net2net-like approach
 
