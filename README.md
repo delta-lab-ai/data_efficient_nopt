@@ -85,7 +85,7 @@ If you want to generate your own data, we have a dedicated repository [data_gene
 
 Our implementation is based on Subramanian et al. 2024 "[Towards Foundation Models for Scientific Machine Learning: Characterizing Scaling and Transfer Behavior](https://arxiv.org/abs/2306.00258)" ([Github Link](https://github.com/ShashankSubramanian/neuraloperators-TL-scaling)).
 
-### 1) Data Download:
+### 1) Data Download: [Google Drive for Helmholtz](https://drive.google.com/drive/folders/1UjIaF6FsjmN_xlGGSUX-1K2V3EF2Zalw?usp=drive_link) | [Google Drive for Poisson](https://drive.google.com/drive/folders/1crIsTZGxZULWhrXkwGDiWF33W6RHxJkf?usp=drive_link)
 
 ### 2) Pretraining
 ```bash
