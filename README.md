@@ -86,23 +86,30 @@ If you want to generate your own data, we have a dedicated repository [data_gene
 Our implementation is based on Subramanian et al. 2024 "[Towards Foundation Models for Scientific Machine Learning: Characterizing Scaling and Transfer Behavior](https://arxiv.org/abs/2306.00258)" ([Github Link](https://github.com/ShashankSubramanian/neuraloperators-TL-scaling)).
 
 ### 1) Data Download: [Google Drive for Helmholtz](https://drive.google.com/drive/folders/1UjIaF6FsjmN_xlGGSUX-1K2V3EF2Zalw?usp=drive_link) | [Google Drive for Poisson](https://drive.google.com/drive/folders/1crIsTZGxZULWhrXkwGDiWF33W6RHxJkf?usp=drive_link)
+* For Poisson, we used data with diffusion eigenvalue ranged 1 to 20 to pretrain and 5 to 15 to finetune. This physics parameter is denoted as `e1_20` and `e5_15` respectively in our uploaded files.
+* For Helmholtz, we used data with wave number ranged 1 to 20 to pretrain and 5 to 15 to finetune. This physics parameter is denoted as `o1_20` and `o5_15` respectively in our uploaded files.
 
 ### 2) Pretraining
+* Use the following script to pretrain with Helmholtz data (wave number ranged from 1 to 20), blur ratio between 0 and 1, and mask ratio 0.1. Please change the corresponding data file paths in the configuration file:
 ```bash
-pretrain_basic.py
+python pretrain_basic.py \
+--yaml_config ./config/operators_helmholtz.yaml \
+--config helm-64-pretrain-o1_20_m1 \
+--run_name random_run_name
 ```
 
 ### 3) Fine-tuning
 * Use checkpoints by your own [pretraining](#2-pretraining), or download Pretrained checkpoints: [Poisson](https://drive.google.com/drive/folders/1ESv3PbvX4bega5DYR5XonUHF23D0HXI5?usp=drive_link) | [Helmholtz](https://drive.google.com/drive/folders/1xjLbLV5-SBdHEDZEQaFXOr09jHQBQB-3?usp=drive_link)
-<!--
-[FNO-Poisson](https://drive.google.com/drive/folders/1ekmXqqvpaY6pNStTciw1SCAzF0gjFP_V?usp=drive_link) | [FNO-Helmholtz](https://drive.google.com/drive/folders/1k7US8ZAgB14Wj9bfdgO_Cjw6hOrG6UaZ?usp=drive_link)
--->
+* Use the following script to finetune with Helmholtz data with data size 256. Please change the pretrained checkpoint path and data file paths accordingly:
 ```bash
-train_basic.py
+python train_basic.py \
+--yaml_config ./config/operators_helmholtz.yaml \
+--config helm-64-o5_15_ft5_r2 \
+--run_name random_run_name
 ```
 
 ### 4) In-context Learning (Out-of-Distribution Testing)
-* Use checkpoints by your own [fine-tuning](#3-fine-tuning), or download fine-tuned checkpoints: [FNO-Poisson]() | [FNO-Helmholtz]()
+* Use checkpoints by your own [fine-tuning](#3-fine-tuning), or download fine-tuned checkpoints: [FNO-Poisson](https://drive.google.com/drive/folders/1ekmXqqvpaY6pNStTciw1SCAzF0gjFP_V?usp=drive_link) | [FNO-Helmholtz](https://drive.google.com/drive/folders/1k7US8ZAgB14Wj9bfdgO_Cjw6hOrG6UaZ?usp=drive_link)
 ```bash
 CUDA_VISIBLE_DEVICES=0 python inference_fno_helmholtz_poisson.py \
 --config config/inference_poisson.yaml \
