@@ -93,7 +93,10 @@ pretrain_basic.py
 ```
 
 ### 3) Fine-tuning
-* Use checkpoints by your own [pretraining](#2-pretraining), or download Pretrained checkpoints: [Poisson]() | [Helmholtz]()
+* Use checkpoints by your own [pretraining](#2-pretraining), or download Pretrained checkpoints: [Poisson](https://drive.google.com/drive/folders/1ESv3PbvX4bega5DYR5XonUHF23D0HXI5?usp=drive_link) | [Helmholtz](https://drive.google.com/drive/folders/1xjLbLV5-SBdHEDZEQaFXOr09jHQBQB-3?usp=drive_link)
+<!--
+[FNO-Poisson](https://drive.google.com/drive/folders/1ekmXqqvpaY6pNStTciw1SCAzF0gjFP_V?usp=drive_link) | [FNO-Helmholtz](https://drive.google.com/drive/folders/1k7US8ZAgB14Wj9bfdgO_Cjw6hOrG6UaZ?usp=drive_link)
+-->
 ```bash
 train_basic.py
 ```
