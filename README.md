@@ -90,7 +90,7 @@ Our implementation is based on Subramanian et al. 2024 "[Towards Foundation Mode
 * For Helmholtz, we used data with wave number ranged 1 to 20 to pretrain and 5 to 15 to finetune. This physics parameter is denoted as `o1_20` and `o5_15` respectively in our uploaded files.
 
 ### 2) Pretraining
-* Use the following script to pretrain with Helmholtz data (wave number ranged from 1 to 20), blur ratio between 0 and 1, and mask ratio 0.1. Please change the corresponding data file paths in the configuration file:
+* Use the following script to pretrain with Helmholtz data (wave number ranged from 1 to 20), blur ratio between 0 and 1, and mask ratio 0.1. Please change the corresponding data file paths in the configuration YAML file:
 ```bash
 python pretrain_basic.py \
 --yaml_config ./config/operators_helmholtz.yaml \
@@ -100,7 +100,7 @@ python pretrain_basic.py \
 
 ### 3) Fine-tuning
 * Use checkpoints by your own [pretraining](#2-pretraining), or download Pretrained checkpoints: [Poisson](https://drive.google.com/drive/folders/1ESv3PbvX4bega5DYR5XonUHF23D0HXI5?usp=drive_link) | [Helmholtz](https://drive.google.com/drive/folders/1xjLbLV5-SBdHEDZEQaFXOr09jHQBQB-3?usp=drive_link)
-* Use the following script to finetune with Helmholtz data with data size 256. Please change the pretrained checkpoint path and data file paths accordingly:
+* Use the following script to finetune with Helmholtz data with data size 256. Please change the pretrained checkpoint path and data file paths accordingly in the configuration YAML file:
 ```bash
 python train_basic.py \
 --yaml_config ./config/operators_helmholtz.yaml \
